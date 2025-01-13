@@ -52,12 +52,6 @@ const shoppingTerms = [
   'buy', 'purchase', 'order', 'payment'
 ];
 
-// E-ticaret platformları
-const ecommercePlatforms = [
-  'trendyol', 'hepsiburada', 'amazon', 'n11', 'gittigidiyor',
-  'teknosa', 'mediamarkt', 'vatan', 'alibaba', 'aliexpress'
-];
-
 // Ürün kategorileri
 const productCategories = [
   // Elektronik

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
-import puppeteer from 'puppeteer-core';
 import type { Page } from 'puppeteer-core';
 import chromium from '@sparticuz/chromium-min';
+
+// Development ve production ortamları için farklı import
+const puppeteer = process.env.NODE_ENV === 'development' 
+  ? require('puppeteer')
+  : require('puppeteer-core');
 
 interface Product {
   name: string;
@@ -79,10 +83,13 @@ const autoScroll = async (page: Page) => {
 const scrapeProducts = async (url: string): Promise<Product[]> => {
   let browser;
   try {
-    // Vercel için Puppeteer konfigürasyonu
-    const executablePath = await chromium.executablePath();
-
-    browser = await puppeteer.launch({
+    // Development ve production ortamları için farklı konfigürasyon
+    const isDev = process.env.NODE_ENV === 'development';
+    
+    const options = isDev ? {
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    } : {
       args: [
         ...chromium.args,
         '--no-sandbox',
@@ -95,9 +102,11 @@ const scrapeProducts = async (url: string): Promise<Product[]> => {
         '--disable-gpu'
       ],
       defaultViewport: chromium.defaultViewport,
-      executablePath: executablePath,
+      executablePath: await chromium.executablePath(),
       headless: true
-    });
+    };
+
+    browser = await puppeteer.launch(options);
 
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
@@ -183,10 +192,13 @@ const scrapeProducts = async (url: string): Promise<Product[]> => {
 const scrapeSpecialProducts = async (url: string): Promise<Product[]> => {
   let browser;
   try {
-    // Vercel için Puppeteer konfigürasyonu
-    const executablePath = await chromium.executablePath();
-
-    browser = await puppeteer.launch({
+    // Development ve production ortamları için farklı konfigürasyon
+    const isDev = process.env.NODE_ENV === 'development';
+    
+    const options = isDev ? {
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    } : {
       args: [
         ...chromium.args,
         '--no-sandbox',
@@ -199,9 +211,11 @@ const scrapeSpecialProducts = async (url: string): Promise<Product[]> => {
         '--disable-gpu'
       ],
       defaultViewport: chromium.defaultViewport,
-      executablePath: executablePath,
+      executablePath: await chromium.executablePath(),
       headless: true
-    });
+    };
+
+    browser = await puppeteer.launch(options);
 
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
@@ -312,84 +326,126 @@ const saveToCache = (endpoint: string, data: Product[]) => {
 };
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const endpoint = searchParams.get('endpoint');
-  const refresh = searchParams.get('refresh') === 'true';
-
-  if (!endpoint) {
-    return NextResponse.json(
-      { error: 'Endpoint parameter is required' },
-      { status: 400 }
-    );
-  }
-
-  // Rate limiting kontrolü
-  const now = Date.now();
-  const lastRequest = trendCache.timestamps[endpoint] || 0;
-  if (now - lastRequest < 3000 && refresh) {
-    return NextResponse.json(
-      { error: 'Çok fazla istek yapıldı. Lütfen 3 saniye bekleyin.' },
-      { status: 429 }
-    );
-  }
-
   try {
-    // Cache kontrolü
-    const cachedData = checkCache(endpoint, refresh);
-    if (cachedData) {
-      return NextResponse.json({
-        data: cachedData,
-        lastUpdate: trendCache.lastUpdate,
-        fromCache: true,
-        cacheTimestamp: trendCache.timestamps[endpoint]
-      });
+    const { searchParams } = new URL(request.url);
+    const endpoint = searchParams.get('endpoint');
+    const refresh = searchParams.get('refresh') === 'true';
+
+    if (!endpoint) {
+      return NextResponse.json(
+        { error: 'Endpoint parametresi gerekli' },
+        { status: 400 }
+      );
     }
 
-    // URL'yi endpoint'e göre belirle
-    let url = '';
-    switch(endpoint) {
-      case 'best-sellers':
-        url = 'https://www.trendyol.com/cok-satanlar?type=bestSeller&webGenderId=1';
-        break;
-      case 'most-viewed':
-        url = 'https://www.trendyol.com/cok-satanlar?type=topViewed&webGenderId=1';
-        break;
-      case 'most-favorited':
-        url = 'https://www.trendyol.com/cok-satanlar?type=mostFavourite&webGenderId=1';
-        break;
-      case 'most-rated':
-        url = 'https://www.trendyol.com/cok-satanlar?type=mostRated&webGenderId=1';
-        break;
-      case 'flash-sales':
-        url = 'https://www.trendyol.com/sr?tag=fs_13_1_2025_9_12';
-        break;
-      case 'most-added-to-cart':
-        url = 'https://www.trendyol.com/sr?fl=sepettekiurunler&sst=BEST_SELLER';
-        break;
-      default:
+    // Rate limiting kontrolü
+    const now = Date.now();
+    const lastRequest = trendCache.timestamps[endpoint] || 0;
+    if (now - lastRequest < 3000 && refresh) {
+      return NextResponse.json(
+        { error: 'Çok fazla istek yapıldı. Lütfen 3 saniye bekleyin.' },
+        { status: 429 }
+      );
+    }
+
+    try {
+      // Cache kontrolü
+      const cachedData = checkCache(endpoint, refresh);
+      if (cachedData) {
+        return NextResponse.json({
+          data: cachedData,
+          lastUpdate: trendCache.lastUpdate,
+          fromCache: true,
+          cacheTimestamp: trendCache.timestamps[endpoint]
+        });
+      }
+
+      // URL'yi endpoint'e göre belirle
+      let url = '';
+      switch(endpoint) {
+        case 'best-sellers':
+          url = 'https://www.trendyol.com/cok-satanlar?type=bestSeller&webGenderId=1';
+          break;
+        case 'most-viewed':
+          url = 'https://www.trendyol.com/cok-satanlar?type=topViewed&webGenderId=1';
+          break;
+        case 'most-favorited':
+          url = 'https://www.trendyol.com/cok-satanlar?type=mostFavourite&webGenderId=1';
+          break;
+        case 'most-rated':
+          url = 'https://www.trendyol.com/cok-satanlar?type=mostRated&webGenderId=1';
+          break;
+        case 'flash-sales':
+          url = 'https://www.trendyol.com/sr?tag=fs_13_1_2025_9_12';
+          break;
+        case 'most-added-to-cart':
+          url = 'https://www.trendyol.com/sr?fl=sepettekiurunler&sst=BEST_SELLER';
+          break;
+        default:
+          return NextResponse.json(
+            { error: 'Geçersiz endpoint' },
+            { status: 400 }
+          );
+      }
+
+      console.log(`Scraping başlatılıyor: ${url}`);
+
+      // Scraping işlemi - endpoint'e göre uygun scraping fonksiyonunu kullan
+      const products = await (endpoint === 'flash-sales' || endpoint === 'most-added-to-cart' 
+        ? scrapeSpecialProducts(url) 
+        : scrapeProducts(url));
+      
+      if (!products || products.length === 0) {
+        console.error('Ürün bulunamadı');
         return NextResponse.json(
-          { error: 'Invalid endpoint' },
-          { status: 400 }
+          { error: 'Ürün bulunamadı veya sayfa yüklenemedi' },
+          { status: 404 }
         );
+      }
+
+      console.log(`${products.length} ürün başarıyla çekildi`);
+      
+      // Cache güncelleme
+      saveToCache(endpoint, products);
+
+      return NextResponse.json({
+        data: products,
+        lastUpdate: trendCache.lastUpdate,
+        fromCache: false
+      });
+
+    } catch (error) {
+      console.error('Scraping error:', error);
+      let errorMessage = 'Veriler alınırken bir hata oluştu';
+      let statusCode = 500;
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        if (error.message.includes('Navigation timeout')) {
+          statusCode = 504;
+          errorMessage = 'Sayfa yükleme zaman aşımına uğradı';
+        } else if (error.message.includes('net::ERR_')) {
+          statusCode = 503;
+          errorMessage = 'Ağ bağlantısı hatası';
+        }
+      }
+
+      return NextResponse.json(
+        { 
+          error: errorMessage,
+          details: error instanceof Error ? error.message : 'Unknown error'
+        },
+        { status: statusCode }
+      );
     }
 
-    // Scraping işlemi - endpoint'e göre uygun scraping fonksiyonunu kullan
-    const products = await (endpoint === 'flash-sales' || endpoint === 'most-added-to-cart' 
-      ? scrapeSpecialProducts(url) 
-      : scrapeProducts(url));
-    
-    // Cache güncelleme
-    saveToCache(endpoint, products);
-
-    return NextResponse.json({
-      data: products,
-      lastUpdate: trendCache.lastUpdate,
-      fromCache: false
-    });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('API error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch data' },
+      { 
+        error: 'API hatası',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

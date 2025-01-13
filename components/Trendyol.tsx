@@ -117,18 +117,57 @@ export function Trendyol() {
 
   const fetchFromApi = useCallback(async (endpoint: string, forceRefresh: boolean = false) => {
     const url = `/api/trendyol?endpoint=${endpoint}${forceRefresh ? '&refresh=true' : ''}`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      if (response.status === 429) {
-        throw new Error('Rate limit aşıldı');
+    try {
+      const response = await fetch(url);
+      const contentType = response.headers.get('content-type');
+      
+      // HTML yanıt kontrolü
+      if (contentType && contentType.includes('text/html')) {
+        console.error('HTML response received instead of JSON');
+        throw new Error('Sunucu şu anda bakımda. Lütfen daha sonra tekrar deneyin.');
       }
-      throw new Error(`HTTP error! status: ${response.status}`);
+
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        throw new Error('Sunucudan geçersiz yanıt alındı. Lütfen daha sonra tekrar deneyin.');
+      }
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error('Rate limit aşıldı. Lütfen biraz bekleyin.');
+        } else if (response.status === 504) {
+          throw new Error('Sayfa yükleme zaman aşımına uğradı. Lütfen tekrar deneyin.');
+        } else if (response.status === 503) {
+          throw new Error('Sunucu şu anda meşgul. Lütfen daha sonra tekrar deneyin.');
+        } else if (response.status === 404) {
+          throw new Error('Ürünler bulunamadı. Lütfen tekrar deneyin.');
+        }
+        throw new Error(result.error || `Sunucu hatası: ${response.status}`);
+      }
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      return result;
+    } catch (error) {
+      console.error('API error:', error);
+      // localStorage'dan veri yüklemeyi dene
+      if (typeof window !== 'undefined') {
+        const storedData = localStorage.getItem('trendyolData');
+        if (storedData) {
+          const data = JSON.parse(storedData);
+          if (data[endpoint]) {
+            console.log('Using cached data from localStorage');
+            return { data: data[endpoint], fromCache: true };
+          }
+        }
+      }
+      throw error;
     }
-    const result = await response.json();
-    if (result.error) {
-      throw new Error(result.error);
-    }
-    return result;
   }, []);
 
   const fetchData = useCallback(async (forceRefresh: boolean = false) => {
