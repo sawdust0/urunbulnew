@@ -47,7 +47,14 @@ export function Trends() {
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   
   // Sesli bildirim için audio referansı
-  const notificationSound = useRef<HTMLAudioElement | undefined>(new Audio('/notification.mp3'));
+  const notificationSound = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    // Audio nesnesini sadece client tarafında oluştur
+    if (typeof window !== 'undefined') {
+      notificationSound.current = new Audio('/notification.mp3');
+    }
+  }, []);
 
   const fetchTrends = useCallback(async () => {
     try {
@@ -63,8 +70,8 @@ export function Trends() {
       }
 
       // Yeni trend varsa ve ses açıksa bildirim ver
-      if (data.newTrends && isSoundEnabled) {
-        notificationSound.current?.play();
+      if (data.newTrends && isSoundEnabled && notificationSound.current) {
+        notificationSound.current.play();
         toast({
           title: "Yeni Trend!",
           description: "Yeni alışveriş trendleri eklendi",
@@ -91,7 +98,7 @@ export function Trends() {
     const interval = setInterval(fetchTrends, 5 * 60 * 1000);
     return () => {
       clearInterval(interval);
-      notificationSound.current = undefined;
+      notificationSound.current = null;
     };
   }, [fetchTrends]);
 
