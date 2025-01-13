@@ -94,12 +94,17 @@ const scrapeProducts = async (url: string): Promise<Product[]> => {
       browser = await puppeteer.launch(options);
     } else {
       // Vercel production environment
-      const executablePath = await chromium.executablePath();
-      
       const options = {
-        args: chromium.args,
-        executablePath,
-        headless: chromium.headless,
+        args: [
+          ...chromium.args,
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-gpu',
+          '--disable-dev-shm-usage',
+          '--single-process'
+        ],
+        executablePath: await chromium.executablePath(),
+        headless: true,
         ignoreHTTPSErrors: true
       };
       
@@ -202,12 +207,17 @@ const scrapeSpecialProducts = async (url: string): Promise<Product[]> => {
       browser = await puppeteer.launch(options);
     } else {
       // Vercel production environment
-      const executablePath = await chromium.executablePath();
-      
       const options = {
-        args: chromium.args,
-        executablePath,
-        headless: chromium.headless,
+        args: [
+          ...chromium.args,
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-gpu',
+          '--disable-dev-shm-usage',
+          '--single-process'
+        ],
+        executablePath: await chromium.executablePath(),
+        headless: true,
         ignoreHTTPSErrors: true
       };
       
