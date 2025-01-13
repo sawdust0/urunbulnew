@@ -66,25 +66,27 @@ export function Trendyol() {
 
   const loadFromLocalStorage = useCallback(() => {
     try {
-      const storedData = localStorage.getItem('trendyolData');
-      if (storedData) {
-        const data = JSON.parse(storedData);
-        if (data.lastUpdate) {
-          const lastUpdateDate = new Date(data.lastUpdate);
-          const now = new Date();
-          const hoursDiff = (now.getTime() - lastUpdateDate.getTime()) / (1000 * 60 * 60);
-          
-          // Only load from cache if it's less than 24 hours old
-          if (hoursDiff < 24) {
-            setBestSellers(data.bestSellers || []);
-            setMostViewed(data.mostViewed || []);
-            setMostFavorited(data.mostFavorited || []);
-            setMostRated(data.mostRated || []);
-            setFlashSales(data.flashSales || []);
-            setMostAddedToCart(data.mostAddedToCart || []);
-            setLastUpdate(lastUpdateDate);
-            setIsFromCache(true);
-            return true;
+      if (typeof window !== 'undefined') {
+        const storedData = localStorage.getItem('trendyolData');
+        if (storedData) {
+          const data = JSON.parse(storedData);
+          if (data.lastUpdate) {
+            const lastUpdateDate = new Date(data.lastUpdate);
+            const now = new Date();
+            const hoursDiff = (now.getTime() - lastUpdateDate.getTime()) / (1000 * 60 * 60);
+            
+            // Only load from cache if it's less than 24 hours old
+            if (hoursDiff < 24) {
+              setBestSellers(data.bestSellers || []);
+              setMostViewed(data.mostViewed || []);
+              setMostFavorited(data.mostFavorited || []);
+              setMostRated(data.mostRated || []);
+              setFlashSales(data.flashSales || []);
+              setMostAddedToCart(data.mostAddedToCart || []);
+              setLastUpdate(lastUpdateDate);
+              setIsFromCache(true);
+              return true;
+            }
           }
         }
       }
@@ -97,15 +99,17 @@ export function Trendyol() {
 
   const saveToLocalStorage = (data: CacheData) => {
     try {
-      localStorage.setItem('trendyolData', JSON.stringify({
-        bestSellers: data.bestSellers,
-        mostViewed: data.mostViewed,
-        mostFavorited: data.mostFavorited,
-        mostRated: data.mostRated,
-        flashSales: data.flashSales,
-        mostAddedToCart: data.mostAddedToCart,
-        lastUpdate: data.lastUpdate
-      }));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('trendyolData', JSON.stringify({
+          bestSellers: data.bestSellers,
+          mostViewed: data.mostViewed,
+          mostFavorited: data.mostFavorited,
+          mostRated: data.mostRated,
+          flashSales: data.flashSales,
+          mostAddedToCart: data.mostAddedToCart,
+          lastUpdate: data.lastUpdate
+        }));
+      }
     } catch (error) {
       console.error('Error saving to localStorage:', error);
     }

@@ -27,8 +27,11 @@ interface CustomProduct {
 
 export function CustomList() {
   const [products, setProducts] = useState<CustomProduct[]>(() => {
-    const savedProducts = localStorage.getItem('customProducts');
-    return savedProducts ? JSON.parse(savedProducts) : [];
+    if (typeof window !== 'undefined') {
+      const savedProducts = localStorage.getItem('customProducts');
+      return savedProducts ? JSON.parse(savedProducts) : [];
+    }
+    return [];
   });
 
   const [newProduct, setNewProduct] = useState({
@@ -44,7 +47,9 @@ export function CustomList() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
-    localStorage.setItem('customProducts', JSON.stringify(products));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('customProducts', JSON.stringify(products));
+    }
   }, [products]);
 
   const addProduct = () => {
