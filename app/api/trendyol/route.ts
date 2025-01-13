@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server';
-import type { Page } from 'puppeteer-core';
+import type { Page } from 'puppeteer';
+import puppeteer from 'puppeteer';
 import chromium from '@sparticuz/chromium-min';
-
-// Development ve production ortamları için farklı import
-const puppeteer = process.env.NODE_ENV === 'development' 
-  ? require('puppeteer')
-  : require('puppeteer-core');
 
 interface Product {
   name: string;
@@ -52,30 +48,33 @@ const trendCache: Cache = {
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 saat (milisaniye cinsinden)
 
 // autoScroll fonksiyonu
-const autoScroll = async (page: Page) => {
+const autoScroll = async (page: Page): Promise<void> => {
   await page.evaluate(async () => {
-    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-    
-    let previousHeight = 0;
-    let scrollAttempts = 0;
-    const maxAttempts = 20;
-    
-    while (scrollAttempts < maxAttempts) {
-      const currentHeight = document.documentElement.scrollHeight;
+    await new Promise<void>((resolve) => {
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
       
-      if (currentHeight === previousHeight) {
-        const products = document.querySelectorAll('.product-card, .p-card-wrppr');
-        if (products.length >= 40) break;
-      }
+      let previousHeight = 0;
+      let scrollAttempts = 0;
+      const maxAttempts = 20;
       
-      window.scrollTo(0, currentHeight);
-      await delay(500);
-      
-      previousHeight = currentHeight;
-      scrollAttempts++;
-    }
-    
-    await delay(2000);
+      const scrollInterval = setInterval(async () => {
+        const currentHeight = document.documentElement.scrollHeight;
+        
+        if (currentHeight === previousHeight || scrollAttempts >= maxAttempts) {
+          const products = document.querySelectorAll('.product-card, .p-card-wrppr');
+          if (products.length >= 40 || scrollAttempts >= maxAttempts) {
+            clearInterval(scrollInterval);
+            await delay(2000);
+            resolve();
+            return;
+          }
+        }
+        
+        window.scrollTo(0, currentHeight);
+        previousHeight = currentHeight;
+        scrollAttempts++;
+      }, 500);
+    });
   });
 };
 
@@ -83,28 +82,29 @@ const autoScroll = async (page: Page) => {
 const scrapeProducts = async (url: string): Promise<Product[]> => {
   let browser;
   try {
-    // Development ve production ortamları için farklı konfigürasyon
     const isDev = process.env.NODE_ENV === 'development';
-    
+    console.log('Environment:', process.env.NODE_ENV);
+
     const options = isDev ? {
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      ignoreHTTPSErrors: true
     } : {
       args: [
         ...chromium.args,
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu'
+        '--hide-scrollbars',
+        '--disable-web-security'
       ],
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: true
+      headless: true,
+      ignoreHTTPSErrors: true
     };
+
+    console.log('Launching browser with options:', {
+      ...options,
+      executablePath: options.executablePath
+    });
 
     browser = await puppeteer.launch(options);
 
@@ -192,28 +192,29 @@ const scrapeProducts = async (url: string): Promise<Product[]> => {
 const scrapeSpecialProducts = async (url: string): Promise<Product[]> => {
   let browser;
   try {
-    // Development ve production ortamları için farklı konfigürasyon
     const isDev = process.env.NODE_ENV === 'development';
-    
+    console.log('Environment:', process.env.NODE_ENV);
+
     const options = isDev ? {
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      ignoreHTTPSErrors: true
     } : {
       args: [
         ...chromium.args,
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu'
+        '--hide-scrollbars',
+        '--disable-web-security'
       ],
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: true
+      headless: true,
+      ignoreHTTPSErrors: true
     };
+
+    console.log('Launching browser with options:', {
+      ...options,
+      executablePath: options.executablePath
+    });
 
     browser = await puppeteer.launch(options);
 
