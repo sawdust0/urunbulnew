@@ -94,6 +94,10 @@ const scrapeProducts = async (url: string): Promise<Product[]> => {
       browser = await puppeteer.launch(options);
     } else {
       // Vercel production environment
+      const executablePath = await chromium.executablePath();
+      
+      console.log('Executable Path:', executablePath);
+      
       const options = {
         args: [
           ...chromium.args,
@@ -103,9 +107,8 @@ const scrapeProducts = async (url: string): Promise<Product[]> => {
           '--disable-dev-shm-usage',
           '--single-process'
         ],
-        executablePath: process.env.CHROME_EXECUTABLE_PATH || await chromium.executablePath(),
-        headless: chromium.headless,
-        defaultViewport: chromium.defaultViewport,
+        executablePath,
+        headless: true,
         ignoreHTTPSErrors: true
       };
       
@@ -213,6 +216,10 @@ const scrapeSpecialProducts = async (url: string): Promise<Product[]> => {
       browser = await puppeteer.launch(options);
     } else {
       // Vercel production environment
+      const executablePath = await chromium.executablePath();
+      
+      console.log('Executable Path:', executablePath);
+      
       const options = {
         args: [
           ...chromium.args,
@@ -222,9 +229,8 @@ const scrapeSpecialProducts = async (url: string): Promise<Product[]> => {
           '--disable-dev-shm-usage',
           '--single-process'
         ],
-        executablePath: process.env.CHROME_EXECUTABLE_PATH || await chromium.executablePath(),
-        headless: chromium.headless,
-        defaultViewport: chromium.defaultViewport,
+        executablePath,
+        headless: true,
         ignoreHTTPSErrors: true
       };
       
