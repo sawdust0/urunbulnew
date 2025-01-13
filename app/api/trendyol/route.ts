@@ -83,17 +83,35 @@ const scrapeProducts = async (url: string): Promise<Product[]> => {
     const executablePath = await chromium.executablePath();
 
     browser = await puppeteer.launch({
-      args: chromium.args,
+      args: [
+        ...chromium.args,
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu'
+      ],
       defaultViewport: chromium.defaultViewport,
       executablePath: executablePath,
-      headless: chromium.headless,
+      headless: true
     });
 
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
     await page.setExtraHTTPHeaders(headers);
     
-    await page.goto(url, { waitUntil: 'networkidle0', timeout: 60000 });
+    // Timeout süresini artır
+    await page.setDefaultNavigationTimeout(120000);
+    await page.goto(url, { 
+      waitUntil: 'networkidle0', 
+      timeout: 120000 
+    });
+    
+    // Sayfa yüklenene kadar bekle
+    await page.waitForSelector('.product-card, .p-card-wrppr', { timeout: 60000 });
     await autoScroll(page);
 
     const products = await page.evaluate(() => {
@@ -169,17 +187,35 @@ const scrapeSpecialProducts = async (url: string): Promise<Product[]> => {
     const executablePath = await chromium.executablePath();
 
     browser = await puppeteer.launch({
-      args: chromium.args,
+      args: [
+        ...chromium.args,
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu'
+      ],
       defaultViewport: chromium.defaultViewport,
       executablePath: executablePath,
-      headless: chromium.headless,
+      headless: true
     });
 
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
     await page.setExtraHTTPHeaders(headers);
     
-    await page.goto(url, { waitUntil: 'networkidle0', timeout: 60000 });
+    // Timeout süresini artır
+    await page.setDefaultNavigationTimeout(120000);
+    await page.goto(url, { 
+      waitUntil: 'networkidle0', 
+      timeout: 120000 
+    });
+    
+    // Sayfa yüklenene kadar bekle
+    await page.waitForSelector('.p-card-chldrn-cntnr.card-border', { timeout: 60000 });
     await autoScroll(page);
 
     const products = await page.evaluate(() => {

@@ -44,10 +44,12 @@ const shoppingTerms = [
   // Türkçe terimler
   'indirim', 'kampanya', 'fırsat', 'satış', 'mağaza',
   'alışveriş', 'fiyat', 'ucuz', 'hesaplı', 'outlet',
+  'satın al', 'satın alma', 'sipariş', 'ödeme',
   
   // İngilizce terimler
   'discount', 'sale', 'deal', 'shopping', 'price',
-  'cheap', 'affordable', 'outlet', 'store', 'shop'
+  'cheap', 'affordable', 'outlet', 'store', 'shop',
+  'buy', 'purchase', 'order', 'payment'
 ];
 
 // E-ticaret platformları
@@ -61,10 +63,29 @@ const productCategories = [
   // Elektronik
   'telefon', 'phone', 'laptop', 'tablet', 'bilgisayar',
   'computer', 'tv', 'kulaklık', 'headphone', 'airpods',
+  'şarj', 'charger', 'kamera', 'camera', 'drone',
   
   // Giyim
   'ayakkabı', 'shoes', 'çanta', 'bag', 'kıyafet',
-  'clothes', 'elbise', 'dress', 'gömlek', 'shirt'
+  'clothes', 'elbise', 'dress', 'gömlek', 'shirt',
+  'pantolon', 'pants', 'mont', 'jacket', 'tişört',
+  't-shirt', 'kazak', 'sweater', 'ceket', 'coat',
+  
+  // Ev & Yaşam
+  'mobilya', 'furniture', 'koltuk', 'sofa', 'masa',
+  'table', 'sandalye', 'chair', 'yatak', 'bed',
+  'dolap', 'cabinet', 'halı', 'carpet', 'perde',
+  'curtain', 'aydınlatma', 'lighting',
+  
+  // Kozmetik & Kişisel Bakım
+  'parfüm', 'perfume', 'makyaj', 'makeup', 'krem',
+  'cream', 'şampuan', 'shampoo', 'deodorant', 'ruj',
+  'lipstick', 'fondöten', 'foundation',
+  
+  // Spor & Outdoor
+  'spor', 'sport', 'koşu', 'running', 'fitness',
+  'yoga', 'bisiklet', 'bicycle', 'kamp', 'camping',
+  'dağcılık', 'hiking', 'tenis', 'tennis'
 ];
 
 // Cache
@@ -103,22 +124,18 @@ interface XMLResult {
 const isShoppingRelated = (title: string, newsContent: string): boolean => {
   const textToCheck = (title + ' ' + newsContent).toLowerCase();
 
-  // En az bir e-ticaret platformu içermeli
-  const hasEcommerce = ecommercePlatforms.some(platform => 
-    textToCheck.includes(platform)
+  // En az bir alışveriş terimi içermeli
+  const hasShoppingTerm = shoppingTerms.some(term => 
+    textToCheck.includes(term.toLowerCase())
   );
 
-  // Alışveriş terimi içermeli
-  const hasShopping = shoppingTerms.some(term => 
-    textToCheck.includes(term)
+  // En az bir ürün kategorisi içermeli
+  const hasProductTerm = productCategories.some(category =>
+    textToCheck.includes(category.toLowerCase())
   );
 
-  // Ürün kategorisi içermeli
-  const hasProduct = productCategories.some(category =>
-    textToCheck.includes(category)
-  );
-
-  return hasEcommerce || (hasShopping && hasProduct);
+  // Her ikisi de eşleşmelidir
+  return hasShoppingTerm && hasProductTerm;
 };
 
 export async function GET(request: Request) {
