@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import puppeteer from 'puppeteer-core';
 import type { Page } from 'puppeteer-core';
+import chromium from '@sparticuz/chromium-min';
 
 interface Product {
   name: string;
@@ -76,13 +77,18 @@ const autoScroll = async (page: Page) => {
 
 // Scraping fonksiyonu
 const scrapeProducts = async (url: string): Promise<Product[]> => {
-  const browser = await puppeteer.launch({
-    headless: true,
-    executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
-
+  let browser;
   try {
+    // Vercel için Puppeteer konfigürasyonu
+    const executablePath = await chromium.executablePath();
+
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: executablePath,
+      headless: chromium.headless,
+    });
+
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
     await page.setExtraHTTPHeaders(headers);
@@ -149,19 +155,26 @@ const scrapeProducts = async (url: string): Promise<Product[]> => {
     console.error('Scraping error:', error);
     throw error;
   } finally {
-    await browser.close();
+    if (browser) {
+      await browser.close();
+    }
   }
 };
 
 // Flash ürünler ve sepetteki ürünler için özel scraping fonksiyonu
 const scrapeSpecialProducts = async (url: string): Promise<Product[]> => {
-  const browser = await puppeteer.launch({
-    headless: true,
-    executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
-
+  let browser;
   try {
+    // Vercel için Puppeteer konfigürasyonu
+    const executablePath = await chromium.executablePath();
+
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: executablePath,
+      headless: chromium.headless,
+    });
+
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
     await page.setExtraHTTPHeaders(headers);
@@ -233,7 +246,9 @@ const scrapeSpecialProducts = async (url: string): Promise<Product[]> => {
     console.error('Special products scraping error:', error);
     throw error;
   } finally {
-    await browser.close();
+    if (browser) {
+      await browser.close();
+    }
   }
 };
 
