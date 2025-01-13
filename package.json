@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "postinstall": "node node_modules/@sparticuz/chromium-min/install.js"
+    "lint": "next lint"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.2",
@@ -24,6 +23,7 @@
     "@radix-ui/react-toggle-group": "^1.1.1",
     "@radix-ui/react-tooltip": "^1.1.6",
     "@sparticuz/chromium-min": "^131.0.1",
+    "puppeteer": "^24.0.0",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -54,7 +54,6 @@
     "i": "^0.3.7",
     "npm": "^11.0.0",
     "postcss": "^8",
-    "puppeteer": "^24.0.0",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }

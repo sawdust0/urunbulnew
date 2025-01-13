@@ -103,10 +103,16 @@ const scrapeProducts = async (url: string): Promise<Product[]> => {
           '--disable-dev-shm-usage',
           '--single-process'
         ],
-        executablePath: await chromium.executablePath(),
-        headless: true,
+        executablePath: process.env.CHROME_EXECUTABLE_PATH || await chromium.executablePath(),
+        headless: chromium.headless,
+        defaultViewport: chromium.defaultViewport,
         ignoreHTTPSErrors: true
       };
+      
+      console.log('Launching browser with options:', {
+        ...options,
+        executablePath: options.executablePath
+      });
       
       browser = await puppeteer.launch(options);
     }
@@ -216,10 +222,16 @@ const scrapeSpecialProducts = async (url: string): Promise<Product[]> => {
           '--disable-dev-shm-usage',
           '--single-process'
         ],
-        executablePath: await chromium.executablePath(),
-        headless: true,
+        executablePath: process.env.CHROME_EXECUTABLE_PATH || await chromium.executablePath(),
+        headless: chromium.headless,
+        defaultViewport: chromium.defaultViewport,
         ignoreHTTPSErrors: true
       };
+      
+      console.log('Launching browser with options:', {
+        ...options,
+        executablePath: options.executablePath
+      });
       
       browser = await puppeteer.launch(options);
     }
