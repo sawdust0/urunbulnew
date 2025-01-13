@@ -1,3 +1,5 @@
+'use client';
+
 import { Trendyol } from '@/components/Trendyol';
 
 export default function Home() {

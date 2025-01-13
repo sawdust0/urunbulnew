@@ -22,8 +22,11 @@ interface ResearchProduct {
 
 export function MarketResearch() {
   const [products, setProducts] = useState<ResearchProduct[]>(() => {
-    const saved = localStorage.getItem('marketResearchProducts');
-    return saved ? JSON.parse(saved) : [];
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('marketResearchProducts');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
   });
 
   const [newProduct, setNewProduct] = useState<{
@@ -43,7 +46,9 @@ export function MarketResearch() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    localStorage.setItem('marketResearchProducts', JSON.stringify(products));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('marketResearchProducts', JSON.stringify(products));
+    }
   }, [products]);
 
   const addProduct = () => {
