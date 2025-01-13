@@ -85,28 +85,26 @@ const scrapeProducts = async (url: string): Promise<Product[]> => {
     const isDev = process.env.NODE_ENV === 'development';
     console.log('Environment:', process.env.NODE_ENV);
 
-    const options = isDev ? {
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      headless: true,
-      ignoreHTTPSErrors: true
-    } : {
-      args: [
-        ...chromium.args,
-        '--hide-scrollbars',
-        '--disable-web-security'
-      ],
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: true,
-      ignoreHTTPSErrors: true
-    };
-
-    console.log('Launching browser with options:', {
-      ...options,
-      executablePath: options.executablePath
-    });
-
-    browser = await puppeteer.launch(options);
+    if (isDev) {
+      const options = {
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        headless: true,
+        ignoreHTTPSErrors: true
+      };
+      browser = await puppeteer.launch(options);
+    } else {
+      // Vercel production environment
+      const executablePath = await chromium.executablePath();
+      
+      const options = {
+        args: chromium.args,
+        executablePath,
+        headless: chromium.headless,
+        ignoreHTTPSErrors: true
+      };
+      
+      browser = await puppeteer.launch(options);
+    }
 
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
@@ -195,28 +193,26 @@ const scrapeSpecialProducts = async (url: string): Promise<Product[]> => {
     const isDev = process.env.NODE_ENV === 'development';
     console.log('Environment:', process.env.NODE_ENV);
 
-    const options = isDev ? {
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      headless: true,
-      ignoreHTTPSErrors: true
-    } : {
-      args: [
-        ...chromium.args,
-        '--hide-scrollbars',
-        '--disable-web-security'
-      ],
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: true,
-      ignoreHTTPSErrors: true
-    };
-
-    console.log('Launching browser with options:', {
-      ...options,
-      executablePath: options.executablePath
-    });
-
-    browser = await puppeteer.launch(options);
+    if (isDev) {
+      const options = {
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        headless: true,
+        ignoreHTTPSErrors: true
+      };
+      browser = await puppeteer.launch(options);
+    } else {
+      // Vercel production environment
+      const executablePath = await chromium.executablePath();
+      
+      const options = {
+        args: chromium.args,
+        executablePath,
+        headless: chromium.headless,
+        ignoreHTTPSErrors: true
+      };
+      
+      browser = await puppeteer.launch(options);
+    }
 
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
